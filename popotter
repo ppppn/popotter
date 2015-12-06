@@ -3,15 +3,15 @@ from requests_oauthlib import OAuth1Session
 
 from const import CONSUMER_KEY
 from const import CONSUMER_SECRET
-from const import ACCESS_KEY
-from const import ACCESS_SECRET
+from const import ACCESS_TOKEN
+from const import ACCESS_TOKEN_SECRET
 
 import readline
 import os
 import argparse
 
 api = OAuth1Session(CONSUMER_KEY, CONSUMER_SECRET, ACCESS_KEY, ACCESS_SECRET)
-CONT_PRE_STR = '(続き)'
+CONT_PRE_STR = '(続き) '
 CONT_POST_STR = ' (続く)'
 
 parser = argparse.ArgumentParser()
@@ -26,26 +26,27 @@ def DivideTweetIfTooLong(tweet):
   if len(tweet) <= 140:
     devided_tweets.append(tweet)
   else:
-    i = 1
-    len_cont_str = len(CONT_POST_STR.format(i=i))
-    current_str = cont_format.format(pre='',
-                                     str=tweet[0:140-len_cont_str],
-                                     post=CONT_POST_STR.format(i=i))
-    devided_tweets.append(current_str)
-    tweet = tweet[140-len_cont_str:]
-
+    i = 0
     while True:
       i += 1
-      len_cont_str = len((CONT_POST_STR +  CONT_PRE_STR).format(i=i))
-      if len(tweet) > 140-len_cont_str:
-        current_str = cont_format.format(pre=CONT_PRE_STR.format(i=i-1),
-                                         str=tweet[0:140-len_cont_str],
-                                         post=CONT_POST_STR.format(i=i))
+      if i == 1:
+        current_cont_pre = ''
+        current_cont_post = CONT_POST_STR
+      else:
+        current_cont_pre = CONT_POST_STR
+        current_cont_post = CONT_PRE_STR
+
+      len_append_str = len((current_cont_pre + current_cont_post).format(i=i))
+
+      if len(tweet) > 140-len_append_str:
+        current_str = cont_format.format(pre=current_cont_pre.format(i=i-1),
+                                         str=tweet[0:140-len_append_str],
+                                         post=current_cont_post.format(i=i))
         devided_tweets.append(current_str)
-        tweet = tweet[140-len_cont_str:]
+        tweet = tweet[140-len_append_str:]
       else:
         current_str = cont_format.format(pre=CONT_PRE_STR.format(i=i-1),
-                                         str=tweet[0:140-len_cont_str],
+                                         str=tweet[0:140-len_append_str],
                                          post='')
         devided_tweets.append(current_str)
         break
