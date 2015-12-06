@@ -6,22 +6,94 @@ from const import CONSUMER_SECRET
 from const import ACCESS_KEY
 from const import ACCESS_SECRET
 
-from optparse import OptionParser
-
-parser = OptionParser()
-
-parser.add_option('-t', '--tweet', action='store', type='string',
-                  dest='tweet_text', help='Post a tweet', metavar='TEXT')
-
-(options, args) = parser.parse_args()
+import readline
+import os
+import argparse
 
 api = OAuth1Session(CONSUMER_KEY, CONSUMER_SECRET, ACCESS_KEY, ACCESS_SECRET)
+CONT_PRE_STR = '(続き)'
+CONT_POST_STR = ' (続く)'
 
+parser = argparse.ArgumentParser()
+parser.add_argument('--post', '-p', metavar='TEXT', type=str, nargs='+')
+parser.add_argument('--file', '-f', metavar='TEXT', type=str, nargs='+')
+
+def DivideTweetIfTooLong(tweet):
+  global CONT_POST_STR
+  global CONT_PRE_STR
+  cont_format = '{pre}{str}{post}'
+  devided_tweets = []
+  if len(tweet) <= 140:
+    devided_tweets.append(tweet)
+  else:
+    i = 1
+    len_cont_str = len(CONT_POST_STR.format(i=i))
+    current_str = cont_format.format(pre='',
+                                     str=tweet[0:140-len_cont_str],
+                                     post=CONT_POST_STR.format(i=i))
+    devided_tweets.append(current_str)
+    tweet = tweet[140-len_cont_str:]
+
+    while True:
+      i += 1
+      len_cont_str = len((CONT_POST_STR +  CONT_PRE_STR).format(i=i))
+      if len(tweet) > 140-len_cont_str:
+        current_str = cont_format.format(pre=CONT_PRE_STR.format(i=i-1),
+                                         str=tweet[0:140-len_cont_str],
+                                         post=CONT_POST_STR.format(i=i))
+        devided_tweets.append(current_str)
+        tweet = tweet[140-len_cont_str:]
+      else:
+        current_str = cont_format.format(pre=CONT_PRE_STR.format(i=i-1),
+                                         str=tweet[0:140-len_cont_str],
+                                         post='')
+        devided_tweets.append(current_str)
+        break
+  return devided_tweets
+    
 def PostTweet(tweet):
   global api
+  devided_tweets = DivideTweetIfTooLong(tweet)
   url = 'https://api.twitter.com/1.1/statuses/update.json'
-  params = {'status': tweet}
-  ret = api.post(url, params = params)
+  for current_str in devided_tweets:
+    params = {'status': current_str}
+    ret = api.post(url, params = params)
 
-if options.tweet_text != None:
-  PostTweet(options.tweet_text)
+def ReadPostFromFile(path_to_file):
+  if os.path.isfile(path_to_file):
+    f = open(path_to_file, 'r')
+    return f.read()
+  else:
+    return None
+
+def InteractiveMode():
+  print('Interactive Mode')
+  print('Ctrl + C or D to exit.')
+  try:
+    while True:
+      tweet = input('Tweet> ')
+      PostTweet(tweet)
+  except (KeyboardInterrupt, EOFError):
+    print('\nGood bye.')
+
+
+def main():
+  global parser
+  args = parser.parse_args()
+  if args.post == None:
+    if args.file == None:
+      InteractiveMode()
+    else:
+      for filename in args.file:
+        tweet = ReadPostFromFile(filename)
+        if tweet == None:
+          print('Designated file does not exit! Pass it.')
+        else:
+          PostTweet(tweet)
+  else:
+    for tweet in args.post:
+      PostTweet(tweet)
+
+
+if __name__ == '__main__':
+  main()
