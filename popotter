@@ -1,0 +1,27 @@
+#!/usr/bin/env python3
+from requests_oauthlib import OAuth1Session
+
+from const import CONSUMER_KEY
+from const import CONSUMER_SECRET
+from const import ACCESS_KEY
+from const import ACCESS_SECRET
+
+from optparse import OptionParser
+
+parser = OptionParser()
+
+parser.add_option('-t', '--tweet', action='store', type='string',
+                  dest='tweet_text', help='Post a tweet', metavar='TEXT')
+
+(options, args) = parser.parse_args()
+
+api = OAuth1Session(CONSUMER_KEY, CONSUMER_SECRET, ACCESS_KEY, ACCESS_SECRET)
+
+def PostTweet(tweet):
+  global api
+  url = 'https://api.twitter.com/1.1/statuses/update.json'
+  params = {'status': tweet}
+  ret = api.post(url, params = params)
+
+if options.tweet_text != None:
+  PostTweet(options.tweet_text)
