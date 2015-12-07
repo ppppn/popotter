@@ -3,16 +3,14 @@ from requests_oauthlib import OAuth1Session
 
 from const import CONSUMER_KEY
 from const import CONSUMER_SECRET
-from const import ACCESS_TOKEN
-from const import ACCESS_TOKEN_SECRET
 from loader import LoadSettings
-from loader import Loadusersdata
+from loader import LoadUsersData
 
 import readline
 import os
 import argparse
 
-usersdata = Loadusersdata()
+usersdata = LoadUsersData()
 
 api = None
 
