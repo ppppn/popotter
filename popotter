@@ -5,22 +5,32 @@ from const import CONSUMER_KEY
 from const import CONSUMER_SECRET
 from const import ACCESS_TOKEN
 from const import ACCESS_TOKEN_SECRET
+from loader import LoadSettings
+from loader import Loadusersdata
 
 import readline
 import os
 import argparse
 
-api = OAuth1Session(CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
-CONT_PRE_STR = '(続き) '
-CONT_POST_STR = ' (続く)'
+usersdata = Loadusersdata()
+
+api = None
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--post', '-p', metavar='TEXT', type=str, nargs='+')
 parser.add_argument('--file', '-f', metavar='FILENAME', type=str, nargs='+')
 
+group = parser.add_mutually_exclusive_group()
+group.add_argument('--userid', '-i', metavar='USERID', type=int, 
+                   nargs=1, default=[0])
+group.add_argument('--name', '-n', metavar='USERNAME', type=str,
+                   nargs=1, default=None)
+group.add_argument('--listusernames', '-l', action='store_true')
+
+settings = LoadSettings()
 def DivideTweetIfTooLong(tweet):
-  global CONT_POST_STR
-  global CONT_PRE_STR
+  CONT_POST_STR = settings['CONT_POST_STR']
+  CONT_PRE_STR = settings['CONT_PRE_STR']
   cont_format = '{pre}{str}{post}'
   devided_tweets = []
   if len(tweet) <= 140:
@@ -67,8 +77,8 @@ def ReadPostFromFile(path_to_file):
   else:
     return None
 
-def InteractiveMode():
-  print('Interactive Mode')
+def InteractiveMode(name):
+  print('Current Account: {name}'.format(name=name))
   print('Ctrl + C or D to exit.')
   try:
     while True:
@@ -80,10 +90,35 @@ def InteractiveMode():
 
 def main():
   global parser
+  global api
   args = parser.parse_args()
+  if args.listusernames == True:
+    print('Users:')
+    i = 0
+    while i < len(usersdata):
+      print(' {id:<2} {username}'.format(id=i, username=usersdata[i][0]))
+      return True
+
+  if args.name == None:
+    userid = args.userid[0]
+    if userid > len(usersdata):
+      print('Invalid UserID.')
+      return False
+  else:
+    i = 0
+    while i < len(usersdata):
+      if usersdata[i][0] == args.name[0]:
+        userid = i
+        break
+      i += 1
+
+  (name, access_token, access_token_secret) = usersdata[userid]
+  api = OAuth1Session(CONSUMER_KEY, CONSUMER_SECRET,
+                      access_token, access_token_secret)
+
   if args.post == None:
     if args.file == None:
-      InteractiveMode()
+      InteractiveMode(name=name)
     else:
       for filename in args.file:
         tweet = ReadPostFromFile(filename)
@@ -95,6 +130,7 @@ def main():
   else:
     for tweet in args.post:
       PostTweet(tweet)
+
 
 
 if __name__ == '__main__':
