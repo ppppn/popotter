@@ -16,7 +16,7 @@ CONT_POST_STR = ' (続く)'
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--post', '-p', metavar='TEXT', type=str, nargs='+')
-parser.add_argument('--file', '-f', metavar='TEXT', type=str, nargs='+')
+parser.add_argument('--file', '-f', metavar='FILENAME', type=str, nargs='+')
 
 def DivideTweetIfTooLong(tweet):
   global CONT_POST_STR
@@ -33,8 +33,8 @@ def DivideTweetIfTooLong(tweet):
         current_cont_pre = ''
         current_cont_post = CONT_POST_STR
       else:
-        current_cont_pre = CONT_POST_STR
-        current_cont_post = CONT_PRE_STR
+        current_cont_pre = CONT_PRE_STR
+        current_cont_post = CONT_POST_STR
 
       len_append_str = len((current_cont_pre + current_cont_post).format(i=i))
 
@@ -88,7 +88,8 @@ def main():
       for filename in args.file:
         tweet = ReadPostFromFile(filename)
         if tweet == None:
-          print('Designated file does not exit! Pass it.')
+          print('File "{filename}" does not exit! Pass it.'
+                  .format(filename=filename))
         else:
           PostTweet(tweet)
   else:
