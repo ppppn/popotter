@@ -4,11 +4,11 @@ from default_settings import DEFAULT_SETTINGS
 
 SETTING_ITEMS = ('CONT_PRE', 'CONT_POST')
 def LoadUsersData():
-  path_to_userdata = os.environ.get('HOME') + '/.popotter.users'
-  if os.path.isfile(path_to_userdata):
-    raw_user_data = open(path_to_userdata)
+  path_to_usersdata = os.environ.get('HOME') + '/.popotter.users'
+  if os.path.isfile(path_to_usersdata):
+    raw_users_data = open(path_to_usersdata)
     users_data = []
-    for line in raw_user_data:
+    for line in raw_users_data:
       line = line[:-1]
       users_data.append(line.split(','))
     return users_data
@@ -20,9 +20,12 @@ def LoadSettings():
   if os.path.isfile(path_to_config):
     config_file = open(path_to_config)
     for line in config_file:
-      line = line[:-1]
-      itemname = line.split('=')[0]
-      value = line.split('=')[1]
-      settings[itemname] = value
+      if line[0] == '#':
+        pass
+      else:
+        line = line[:-1]
+        itemname = line.split('=')[0]
+        value = line.split('=')[1]
+        settings[itemname] = value
   return settings
 

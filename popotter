@@ -24,8 +24,41 @@ group.add_argument('--userid', '-i', metavar='USERID', type=int,
 group.add_argument('--name', '-n', metavar='USERNAME', type=str,
                    nargs=1, default=None)
 group.add_argument('--listusernames', '-l', action='store_true')
+group.add_argument('--adduser', action='store_true')
 
 settings = LoadSettings()
+def AddNewUser():
+  REQUEST_TOKEN_URL = 'https://api.twitter.com/oauth/request_token'
+  BASE_AUTHORIZATION_URL = 'https://api.twitter.com/oauth/authorize'
+  ACCESS_TOKEN_URL = 'https://api.twitter.com/oauth/access_token'
+  api = OAuth1Session(CONSUMER_KEY, CONSUMER_SECRET)
+  fetch_response = api.fetch_request_token(REQUEST_TOKEN_URL)
+  access_token = fetch_response.get('oauth_token')
+  access_key_secret = fetch_response.get('oauth_token_secret')
+  authorization_url = api.authorization_url(BASE_AUTHORIZATION_URL)
+  print('Please access the following URL and authorize the app.')
+  print('  {url}'.format(url=authorization_url))
+  print('Please input PIN code.')
+  verifier = input('PIN: ')
+  api = OAuth1Session(CONSUMER_KEY, CONSUMER_SECRET,
+                      access_token, access_key_secret,
+                      verifier=verifier)
+  oauth_tokens = api.fetch_access_token(ACCESS_TOKEN_URL)
+  name = oauth_tokens['screen_name']
+  access_token = oauth_tokens['oauth_token']
+  access_token_secret = oauth_tokens['oauth_token_secret']
+
+  path_to_usersdata = os.environ.get('HOME') + '/.popotter.users'
+  users_data = open(path_to_usersdata, 'a')
+  users_data.write('{name},{access_token},{access_token_secret}\n'
+                  .format(name=name,
+                          access_token=access_token,
+                          access_token_secret=access_token_secret))
+  users_data.close()
+ 
+
+
+
 def DivideTweetIfTooLong(tweet):
   CONT_POST_STR = settings['CONT_POST_STR']
   CONT_PRE_STR = settings['CONT_PRE_STR']
@@ -89,7 +122,11 @@ def InteractiveMode(name):
 def main():
   global parser
   global api
+  global usersdata
   args = parser.parse_args()
+  if args.adduser == True or usersdata == None:
+    AddNewUser()
+    usersdata = LoadUsersData()
   if args.listusernames == True:
     print('Users:')
     i = 0
@@ -109,6 +146,7 @@ def main():
         userid = i
         break
       i += 1
+
 
   (name, access_token, access_token_secret) = usersdata[userid]
   api = OAuth1Session(CONSUMER_KEY, CONSUMER_SECRET,
