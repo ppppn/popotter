@@ -27,6 +27,7 @@ group.add_argument('--listusernames', '-l', action='store_true')
 group.add_argument('--adduser', action='store_true')
 
 settings = LoadSettings()
+
 def AddNewUser():
   REQUEST_TOKEN_URL = 'https://api.twitter.com/oauth/request_token'
   BASE_AUTHORIZATION_URL = 'https://api.twitter.com/oauth/authorize'
@@ -55,42 +56,61 @@ def AddNewUser():
                           access_token=access_token,
                           access_token_secret=access_token_secret))
   users_data.close()
- 
-
-
 
 def DivideTweetIfTooLong(tweet):
   CONT_POST_STR = settings['CONT_POST_STR']
   CONT_PRE_STR = settings['CONT_PRE_STR']
-  cont_format = '{pre}{str}{post}'
+  ENABLE_PRE_STR_IN_FIRST_TW = settings['ENABLE_PRE_STR_IN_FIRST_TW']
+  ENABLE_PRE_STR_IN_LAST_TW = settings['ENABLE_PRE_STR_IN_LAST_TW']
+  ENABLE_POST_STR_IN_FIRST_TW = settings['ENABLE_POST_STR_IN_FIRST_TW']
+  ENABLE_POST_STR_IN_LAST_TW = settings['ENABLE_POST_STR_IN_LAST_TW']
+  first_tw_fmt = ''
+  last_tw_fmt = ''
+  if ENABLE_PRE_STR_IN_FIRST_TW == '1':
+    first_tw_fmt += '{pre}'
+  first_tw_fmt += '{str}'
+  if ENABLE_POST_STR_IN_FIRST_TW == '1':
+    first_tw_fmt += '{post}'
+
+  middle_tw_fmt = '{pre}{str}{post}'
+
+  if ENABLE_PRE_STR_IN_LAST_TW == '1':
+    last_tw_fmt += '{pre}'
+  last_tw_fmt += '{str}'
+  if ENABLE_POST_STR_IN_LAST_TW == '1':
+    last_tw_fmt += '{post}'
+
   devided_tweets = []
+  last_tw = False
   if len(tweet) <= 140:
     return [tweet]
   else:
-    i = 0
+    i = 1
     while True:
-      i += 1
       if i == 1:
-        current_cont_pre = ''
-        current_cont_post = CONT_POST_STR
+        current_format = first_tw_fmt
       else:
-        current_cont_pre = CONT_PRE_STR
-        current_cont_post = CONT_POST_STR
+        current_format = middle_tw_fmt
 
-      len_append_str = len((current_cont_pre + current_cont_post).format(i=i))
+      len_append_str = len(current_format.format(pre=CONT_PRE_STR,
+                                                 str='',
+                                                 post=CONT_POST_STR)
+                                                 .format(i=i, prei=i-1))
 
-      if len(tweet) > 140-len_append_str:
-        current_str = cont_format.format(pre=current_cont_pre.format(i=i-1),
-                                         str=tweet[0:140-len_append_str],
-                                         post=current_cont_post.format(i=i))
-        devided_tweets.append(current_str)
-        tweet = tweet[140-len_append_str:]
-      else:
-        current_str = cont_format.format(pre=CONT_PRE_STR.format(i=i-1),
-                                         str=tweet[0:140-len_append_str],
-                                         post='')
-        devided_tweets.append(current_str)
+      if len(tweet) <= 140-len_append_str:
+        last_tw = True
+        current_format = last_tw_fmt
+      current_str = current_format.format(pre=CONT_PRE_STR,
+                                          str=tweet[0:140-len_append_str],
+                                          post=CONT_POST_STR)\
+                                          .format(i=i, prei=i-1)
+      devided_tweets.append(current_str)
+      if last_tw == True:
         break
+      else:
+        tweet = tweet[140-len_append_str:]
+      i += 1
+
   return devided_tweets
     
 def PostTweet(tweet):
