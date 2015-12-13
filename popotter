@@ -39,7 +39,7 @@ def AddNewUser():
   print('Please access the following URL and authorize the app.')
   print('  {url}'.format(url=authorization_url))
   print('Please input PIN code.')
-  verifier = input('PIN: ')
+  verifier = input('  PIN: ')
   api = OAuth1Session(CONSUMER_KEY, CONSUMER_SECRET,
                       access_token, access_key_secret,
                       verifier=verifier)
@@ -65,7 +65,7 @@ def DivideTweetIfTooLong(tweet):
   cont_format = '{pre}{str}{post}'
   devided_tweets = []
   if len(tweet) <= 140:
-    devided_tweets.append(tweet)
+    return [tweet]
   else:
     i = 0
     while True:
@@ -96,10 +96,10 @@ def DivideTweetIfTooLong(tweet):
 def PostTweet(tweet):
   global api
   devided_tweets = DivideTweetIfTooLong(tweet)
-  url = 'https://api.twitter.com/1.1/statuses/update.json'
+  URL = 'https://api.twitter.com/1.1/statuses/update.json'
   for current_str in devided_tweets:
     params = {'status': current_str}
-    ret = api.post(url, params = params)
+    ret = api.post(URL, params = params)
 
 def ReadPostFromFile(path_to_file):
   if os.path.isfile(path_to_file):
@@ -110,29 +110,49 @@ def ReadPostFromFile(path_to_file):
 
 def InteractiveMode(name):
   print('Current Account: {name}'.format(name=name))
-  print('Ctrl + C or D to exit.')
-  try:
-    while True:
+  print('Ctrl + D on a blank line to exit.')
+  while True:
+    try:
       tweet = input('Tweet> ')
       PostTweet(tweet)
-  except (KeyboardInterrupt, EOFError):
-    print('\nGood bye.')
+    except EOFError:
+      print('\nGood bye.')
+      break
+    except KeyboardInterrupt:
+      print('')
+      continue
 
+def ListingUsers():
+  global usersdata
+  print('Users:')
+  i = 0
+  while i < len(usersdata):
+    print(' {id:<2} {username}'.format(id=i, username=usersdata[i][0]))
+    i += 1
+  return True
+
+def GetUserIDfromUserName(username):
+  i = 0
+  while i < len(usersdata):
+    if usersdata[i][0] == username:
+      userid = i
+      return i
+    i += 1
+  return None
 
 def main():
   global parser
   global api
   global usersdata
   args = parser.parse_args()
+
   if args.adduser == True or usersdata == None:
     AddNewUser()
-    usersdata = LoadUsersData()
+    return True
+
   if args.listusernames == True:
-    print('Users:')
-    i = 0
-    while i < len(usersdata):
-      print(' {id:<2} {username}'.format(id=i, username=usersdata[i][0]))
-      return True
+    ListingUsers()
+    return True
 
   if args.name == None:
     userid = args.userid[0]
@@ -140,13 +160,10 @@ def main():
       print('Invalid UserID.')
       return False
   else:
-    i = 0
-    while i < len(usersdata):
-      if usersdata[i][0] == args.name[0]:
-        userid = i
-        break
-      i += 1
-
+    userid = GetUserIDfromUserName(args.name[0])
+    if userid == None:
+      print('Invalid User Name.')
+      return False
 
   (name, access_token, access_token_secret) = usersdata[userid]
   api = OAuth1Session(CONSUMER_KEY, CONSUMER_SECRET,
