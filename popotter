@@ -11,6 +11,7 @@ import os
 import argparse
 
 usersdata = LoadUsersData()
+settings = LoadSettings()
 
 api = None
 
@@ -26,7 +27,6 @@ group.add_argument('--name', '-n', metavar='USERNAME', type=str,
 group.add_argument('--listusernames', '-l', action='store_true')
 group.add_argument('--adduser', action='store_true')
 
-settings = LoadSettings()
 
 def AddNewUser():
   REQUEST_TOKEN_URL = 'https://api.twitter.com/oauth/request_token'

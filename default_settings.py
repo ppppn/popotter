@@ -1,4 +1,8 @@
 DEFAULT_SETTINGS = {
-  'CONT_PRE_STR':'(続き) ',
-  'CONT_POST_STR':' (続く)',
-  }
+  'CONT_PRE_STR':'',
+  'CONT_POST_STR':' ({i})',
+  'ENABLE_PRE_STR_IN_FIRST_TW':'0',
+  'ENABLE_PRE_STR_IN_LAST_TW':'0',
+  'ENABLE_POST_STR_IN_FIRST_TW':'1',
+  'ENABLE_POST_STR_IN_LAST_TW':'1',
+}
