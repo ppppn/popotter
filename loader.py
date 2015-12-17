@@ -22,11 +22,12 @@ def LoadSettings():
     for line in config_file:
       line = line[:-1]
       line = re.sub('#.*', '', line)
-      itemname = line.split('=')[0]
-      itemname = re.sub(' ', '', itemname)
-      value = line.split('=')[1]
-      value = re.sub('.*?"', '', value, count=1)
-      value = re.sub('".*', '', value, count=1)
-      settings[itemname] = value
+      if re.search('=', line):
+        itemname = line.split('=')[0]
+        itemname = re.sub(' ', '', itemname)
+        value = line.split('=')[1]
+        value = re.sub('.*?"', '', value, count=1)
+        value = re.sub('".*', '', value, count=1)
+        settings[itemname] = value
   return settings
 
