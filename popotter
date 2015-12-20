@@ -176,7 +176,7 @@ def main():
 
   if args.name == None:
     userid = args.userid[0]
-    if userid > len(usersdata):
+    if userid > len(usersdata) - 1:
       print('Invalid UserID.')
       return False
   else:
