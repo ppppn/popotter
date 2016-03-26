@@ -129,7 +129,7 @@ def ReadPostFromFile(path_to_file):
     return None
 
 def InteractiveMode(name):
-  print('Current Account: {name}'.format(name=name))
+  print('Account: {name}'.format(name=name))
   print('Ctrl + D on a blank line to exit.')
   while True:
     try:
